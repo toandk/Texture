@@ -176,6 +176,7 @@ static NSString *ASTextNodeTruncationTokenAttributeName = @"ASTextNodeTruncation
   UIColor *_placeholderColor;
   
   UILongPressGestureRecognizer *_longPressGestureRecognizer;
+  BOOL _alwaysHandleTruncationTokenTap;
 }
 @dynamic placeholderEnabled;
 
@@ -842,9 +843,14 @@ static NSArray *DefaultLinkAttributeNames() {
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
 {
   ASDisplayNodeAssertMainThread();
+  ASLockScopeSelf(); // Protect usage of _passthroughNonlinkTouches and _alwaysHandleTruncationTokenTap ivars.
   
   if (!_passthroughNonlinkTouches) {
     return [super pointInside:point withEvent:event];
+  }
+  
+  if (_alwaysHandleTruncationTokenTap) {
+    return YES;
   }
   
   NSRange range = NSMakeRange(0, 0);
@@ -990,6 +996,18 @@ static NSArray *DefaultLinkAttributeNames() {
 - (BOOL)_pendingTruncationTap
 {
   return [ASLockedSelf(_highlightedLinkAttributeName) isEqualToString:ASTextNodeTruncationTokenAttributeName];
+}
+  
+- (BOOL)alwaysHandleTruncationTokenTap
+{
+  ASLockScopeSelf();
+  return _alwaysHandleTruncationTokenTap;
+}
+
+- (void)setAlwaysHandleTruncationTokenTap:(BOOL)alwaysHandleTruncationTokenTap
+{
+  ASLockScopeSelf();
+  _alwaysHandleTruncationTokenTap = alwaysHandleTruncationTokenTap;
 }
 
 #pragma mark - Shadow Properties
